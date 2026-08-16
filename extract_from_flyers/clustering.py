@@ -149,9 +149,20 @@ def find_price_anchors(tokens: list[dict]) -> list[dict]:
     return anchors
 
 def cluster_by_price_anchor(tokens: list[dict], page_height: float = 1638.0, margin_top: float = 60.0, margin_bottom: float = 100.0) -> list[dict]:
+    """
+    page_height: fallback default used ONLY for tokens that don't carry their own
+    "page_height" metadata (e.g. older synthetic/test tokens). Real tokens produced
+    by extractor.py now carry "page_height" per-token (from the actual PDF page),
+    so each token is filtered against its own page's real dimensions rather than
+    a single fixed value applied to every page.
+    """
+    def _margin_cutoff(tok: dict) -> float:
+        tok_page_height = tok.get("page_height", page_height)
+        return tok_page_height - margin_bottom
+
     valid_tokens = [
-        t for t in tokens 
-        if t["top"] > margin_top and t["bottom"] < (page_height - margin_bottom)
+        t for t in tokens
+        if t["top"] > margin_top and t["bottom"] < _margin_cutoff(t)
     ]
 
     fused_tokens = merge_split_price_fragments(valid_tokens)

@@ -12,8 +12,15 @@ Unified token dict:
         "x0": float, "top": float, "x1": float, "bottom": float,
         "page": int,
         "source": "vector" | "ocr",
-        "conf": float | None   # OCR confidence, None for vector text
+        "conf": float | None,        # OCR confidence, None for vector text
+        "page_width": float,         # real PDF page width this token came from
+        "page_height": float,        # real PDF page height this token came from
     }
+
+OCR tokens are scaled from pixel space back into PDF point space so vector
+and OCR tokens share one coordinate system. Every token also now carries
+its own page's real width/height, so downstream stages (clustering) never
+need to guess or hardcode page dimensions.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ from pytesseract import Output
 
 SCAN_CHAR_THRESHOLD = 100  # below this, treat the page as scanned/flattened
 OCR_DPI = 300
+OCR_MIN_CONF = 40  # tokens below this Tesseract confidence are dropped; vector text is unaffected
 
 
 def _is_scanned_page(page: "pdfplumber.page.Page") -> bool:
@@ -43,6 +51,8 @@ def _extract_vector_tokens(page: "pdfplumber.page.Page", page_num: int) -> list[
             "page": page_num,
             "source": "vector",
             "conf": None,
+            "page_width": float(page.width),
+            "page_height": float(page.height),
         })
     return tokens
 
@@ -60,7 +70,7 @@ def _extract_ocr_tokens(pil_image, page_num: int, pdf_page_width: float, pdf_pag
     for i in range(n):
         raw_text = data["text"][i].strip()
         conf = float(data["conf"][i])
-        if not raw_text or conf < 0:
+        if not raw_text or conf < OCR_MIN_CONF:
             continue
         x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
         tokens.append({
@@ -72,6 +82,8 @@ def _extract_ocr_tokens(pil_image, page_num: int, pdf_page_width: float, pdf_pag
             "page": page_num,
             "source": "ocr",
             "conf": conf,
+            "page_width": float(pdf_page_width),
+            "page_height": float(pdf_page_height),
         })
     return tokens
 

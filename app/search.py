@@ -1,10 +1,17 @@
 # app/search.py
-from typing import List
-from app.models import Product
-from app.loader import load_products
 import os
+from pathlib import Path
+from typing import List
 
-def search_products(products: List[Product], query: str, max_price: float = None) -> List[Product]:
+from app.loader import load_products
+from app.models import Product
+
+DATA_PATH = Path(__file__).parent.parent / "data" / "flyers.json"
+
+
+def search_products(
+    products: List[Product], query: str, max_price: float = None
+) -> List[Product]:
     results = []
     for p in products:
         matches_query = query.lower() in p.name.lower()
@@ -14,6 +21,6 @@ def search_products(products: List[Product], query: str, max_price: float = None
     return results
 
 
-products_list=load_products(os.getcwd()+"/data/flyers.json")
+products_list = load_products(DATA_PATH)
 
-search_products(products=products_list,query='Honeycrisp Apples',max_price=1.45)
+search_products(products=products_list, query="Honeycrisp Apples", max_price=1.45)
