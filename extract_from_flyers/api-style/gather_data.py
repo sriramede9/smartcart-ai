@@ -38,6 +38,7 @@ TARGET_MERCHANTS = [
     "galleria",
     "bulk barn",
     "shoppers drug mart",
+    "costco"
 ]
 
 OUTPUT_DIR = "grocery_data_M6P0C2"
