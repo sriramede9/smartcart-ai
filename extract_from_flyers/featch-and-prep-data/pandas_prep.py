@@ -137,7 +137,12 @@ df['norm_size_base'] = df['pkg_qty'] * df['unit_multiplier']
 #       Only calculate where 'norm_size_base' > 0; otherwise assign `np.nan`.
 # ------------------------------------------------------------------------------
 # Your solution:
-
+# Vectorized conditional arithmetic to compute normalized cost per 100 base units
+df_clean["cost_per_100_base"] = np.where(
+    df_clean["norm_size_base"] > 0,
+    (df_clean["price"] / df_clean["norm_size_base"]) * 100,
+    np.nan,
+)
 
 # Q7 [Vectorized Macro & Grocery Category Tagging]:
 # Context: Users will ask SmartCart high-level semantic questions like:
